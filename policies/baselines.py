@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import itertools
 
-from ..game.config import Config
-from ..game.mdp import State
-from ..game.rules import Action, evaluate, score_hand
-from ..game.simulator import Sim
+from game.config import Config
+from game.mdp import State
+from game.rules import Action, evaluate, score_hand
+from game.simulator import Sim
 
 
 def best_play(cfg: Config, hand):

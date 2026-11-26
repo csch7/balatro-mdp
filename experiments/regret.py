@@ -4,13 +4,13 @@ from __future__ import annotations
 import random
 import time
 
-from ..game.config import Config
-from ..game.mdp import BalatroMDP
-from ..game.simulator import Sim
-from ..planners.sparse_sampling import SparseSampling
-from ..planners.uct import UCT
-from ..policies.baselines import greedy_policy, greedy_rollout, heuristic_action
-from ..solvers.exact import ExactSolver, tree_size
+from game.config import Config
+from game.mdp import BalatroMDP
+from game.simulator import Sim
+from planners.sparse_sampling import SparseSampling
+from planners.uct import UCT
+from policies.baselines import greedy_policy, greedy_rollout, heuristic_action
+from solvers.exact import ExactSolver, tree_size
 
 
 def experiment_exact(cfg: Config, n_states=10, reps=3, seed=0):

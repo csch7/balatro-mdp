@@ -1,5 +1,5 @@
 """Scoring spot checks carried over from the original notebook."""
-from balatro_mdp.game import score_hand
+from game import score_hand
 
 
 def test_royal_flush_score():

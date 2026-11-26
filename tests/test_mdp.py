@@ -1,7 +1,7 @@
 """Generative model and suit-symmetry checks."""
 import random
 
-from balatro_mdp.game import BalatroMDP, Config
+from game import BalatroMDP, Config
 
 
 def test_opening_action_count():

@@ -19,19 +19,19 @@ Simplifications compared with real Balatro: one blind of Ante 1, no jokers, taro
 | `Config.small()` | 14 cards (8 to A, 2 suits) | 5 | 2 / 1 | yes, about 10 to 20 s per root |
 | `Config.tiny()` | 12 cards (9 to A, 2 suits) | 5 | 2 / 1 | yes, a few seconds |
 
-`solvers.exact.tree_size` gives these bounds, and `ExactSolver.solve` raises `TooBig` above 5 x 10^8.
+`solvers/exact.py: tree_size` gives these bounds, and `ExactSolver.solve` raises `TooBig` above 5 x 10^8.
 
 ## Methods
 
 - **Exact backward induction** (`solvers/exact.py`): V(s) = max_a [ r(s,a) + E V(s') ], memoized on the canonical key. Plays that end the episode skip draw enumeration, and the hands_left = 1, discards_left = 0 case has a closed form. `ReferenceSolver` is a shortcut-free second implementation used for cross-checking.
 - **Sparse sampling** (`planners/sparse_sampling.py`, Kearns, Mansour & Ng 2002): every action at every node, C sampled next states, depth H, optional leaf evaluator. Cost is about (|A| C)^H simulator calls, independent of |S|.
-- **UCT** (`planners/uct.py`, Kocsis & Szepesvari 2006): UCB1 selection W_a/N_a + c sqrt(ln N / N_a), progressive widening over the first 1 + floor(2 sqrt N) actions of `policies.ordering.ordered_actions`, greedy-rollout leaf evaluation, and a transposition table keyed by the canonical state. The move played is the most visited root action.
+- **UCT** (`planners/uct.py`, Kocsis & Szepesvari 2006): UCB1 selection W_a/N_a + c sqrt(ln N / N_a), progressive widening over the first 1 + floor(2 sqrt N) actions of `ordered_actions` in `policies/ordering.py`, greedy-rollout leaf evaluation, and a transposition table keyed by the canonical state. The move played is the most visited root action.
 - **Flat Monte Carlo** (`planners/flat_mc.py`): the top 20 ranked actions, n rollouts each, best mean wins.
 - **Baselines** (`policies/baselines.py`): greedy play (best 5-card hand, never discard) and the discard heuristic (discard non-scoring cards while the best hand is at most Two Pair).
 
 ## Experiments
 
-| CLI name | Module | What it measures |
+| `main.py` name | Module | What it measures |
 |---|---|---|
 | `regret-table` | `experiments/regret.py` | regret V*(s) - Q*(s, a) on `Config.small()` vs simulator calls (Table 2, regret plot) |
 | `full-game` | `experiments/full_game.py` | greedy vs UCT win rate on the 52-card Big Blind |

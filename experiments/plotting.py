@@ -1,4 +1,4 @@
-"""Figures for the paper (needs matplotlib: pip install -e '.[plot]')."""
+"""Figures for the paper (needs matplotlib: pip install matplotlib)."""
 from __future__ import annotations
 
 
