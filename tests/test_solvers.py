@@ -1,8 +1,8 @@
 """The fast exact solver must agree with the plain reference implementation."""
 import random
 
-from balatro_mdp.game import BalatroMDP, Config
-from balatro_mdp.solvers import ExactSolver, ReferenceSolver, TooBig
+from game import BalatroMDP, Config
+from solvers import ExactSolver, ReferenceSolver, TooBig
 
 
 def test_exact_matches_reference_on_tiny_deck():

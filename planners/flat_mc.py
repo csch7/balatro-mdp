@@ -1,10 +1,10 @@
 """Flat Monte Carlo policy improvement over the top-ranked actions (no tree)."""
 from __future__ import annotations
 
-from ..game.rules import Action
-from ..game.simulator import Sim
-from ..policies.baselines import heuristic_rollout
-from ..policies.ordering import ordered_actions
+from game.rules import Action
+from game.simulator import Sim
+from policies.baselines import heuristic_rollout
+from policies.ordering import ordered_actions
 
 
 class FlatMC:

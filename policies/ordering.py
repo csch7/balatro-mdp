@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import itertools
 
-from ..game.mdp import BalatroMDP, State
-from ..game.rules import score_hand
+from game.mdp import BalatroMDP, State
+from game.rules import score_hand
 
 
 def ordered_actions(mdp: BalatroMDP, s: State):

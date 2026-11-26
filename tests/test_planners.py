@@ -1,9 +1,9 @@
 """Smoke tests: each planner returns a legal action quickly."""
 import random
 
-from balatro_mdp.game import BalatroMDP, Config, Sim
-from balatro_mdp.planners import UCT, FlatMC, SparseSampling
-from balatro_mdp.policies import greedy_rollout
+from game import BalatroMDP, Config, Sim
+from planners import UCT, FlatMC, SparseSampling
+from policies import greedy_rollout
 
 
 def _setup():

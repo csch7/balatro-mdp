@@ -4,9 +4,9 @@ from __future__ import annotations
 import itertools
 from math import comb
 
-from ..game.config import Config
-from ..game.mdp import BalatroMDP, State
-from ..game.rules import Action, score_hand
+from game.config import Config
+from game.mdp import BalatroMDP, State
+from game.rules import Action, score_hand
 
 
 def tree_size(cfg: Config) -> float:

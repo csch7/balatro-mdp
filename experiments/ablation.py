@@ -8,11 +8,11 @@ import math
 import random
 import time
 
-from ..game.config import Config
-from ..game.mdp import BalatroMDP, State
-from ..game.simulator import Sim, run_episode
-from ..planners.uct import UCT
-from ..policies.baselines import greedy_policy, heuristic_policy
+from game.config import Config
+from game.mdp import BalatroMDP, State
+from game.simulator import Sim, run_episode
+from planners.uct import UCT
+from policies.baselines import greedy_policy, heuristic_policy
 
 
 def plain_key(s: State):

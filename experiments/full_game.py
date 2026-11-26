@@ -5,12 +5,12 @@ import math
 import random
 import time
 
-from ..game.config import Config
-from ..game.mdp import BalatroMDP
-from ..game.simulator import Sim, run_episode
-from ..planners.flat_mc import FlatMC
-from ..planners.uct import UCT
-from ..policies.baselines import (greedy_policy, greedy_rollout, greedy_smallest_policy,
+from game.config import Config
+from game.mdp import BalatroMDP
+from game.simulator import Sim, run_episode
+from planners.flat_mc import FlatMC
+from planners.uct import UCT
+from policies.baselines import (greedy_policy, greedy_rollout, greedy_smallest_policy,
                                   heuristic_policy, heuristic_rollout)
 
 

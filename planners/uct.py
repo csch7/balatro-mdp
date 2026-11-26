@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import math
 
-from ..game.rules import Action
-from ..game.simulator import Sim
-from ..policies.baselines import greedy_rollout
-from ..policies.ordering import ordered_actions
+from game.rules import Action
+from game.simulator import Sim
+from policies.baselines import greedy_rollout
+from policies.ordering import ordered_actions
 
 
 class _Node:
