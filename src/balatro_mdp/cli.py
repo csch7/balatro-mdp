@@ -1,8 +1,10 @@
 """Command-line entry point; replaces the RUN_* flags of the original notebook.
 
-    python -m balatro_mdp                     # quick demo (~15 s): feasibility table + one exact root
-    python -m balatro_mdp regret-table        # pick any of the experiments below, in any order
-    python -m balatro_mdp all                 # every experiment (2-3 hours on one core)
+    balatro-mdp                          # quick demo (~15 s): feasibility table + one exact root
+    balatro-mdp regret-table --plot      # pick any of the experiments below, in any order
+    balatro-mdp all                      # every experiment (2-3 hours on one core)
+
+(`python -m balatro_mdp ...` works the same way.)
 
 Approximate runtimes on one core: regret-table ~5 min (Table 2), full-game ~6 min,
 baselines ~1-10 min, search ~40-50 min, validation ~5 min, tiny-diagnostics ~5-12 min,
@@ -14,15 +16,16 @@ import argparse
 import random
 import time
 
-from .exact import ExactSolver, simulate_optimal
+from pathlib import Path
+
 from .experiments.ablation import experiment_ablation
 from .experiments.full_game import experiment_baselines, experiment_full, experiment_search
-from .experiments.regret import experiment_exact, feasibility_table, plot_regret
+from .experiments.regret import experiment_exact, feasibility_table
 from .experiments.validation import experiment_tiny_diagnostics, experiment_validation
-from .mdp import BalatroMDP, Config, Sim
+from .game import BalatroMDP, Config, Sim
+from .planners import UCT, SparseSampling
 from .policies import greedy_policy, greedy_rollout
-from .sparse import SparseSampling
-from .uct import UCT
+from .solvers import ExactSolver, simulate_optimal
 
 
 def demo():
@@ -60,11 +63,13 @@ def demo():
               f"   ({calls // reps} simulator calls/decision)")
 
 
-def regret_table(plot=False):
+def regret_table(plot=False, out_dir="results"):
     print("\nRegret table on Config.small():")
     rows = experiment_exact(Config.small())
     if plot:
-        print(f"saved {plot_regret(rows)}")
+        from .experiments.plotting import plot_regret   # optional matplotlib dependency
+        Path(out_dir).mkdir(parents=True, exist_ok=True)
+        print(f"saved {plot_regret(rows, path=str(Path(out_dir) / 'regret_vs_calls.png'))}")
 
 
 def full_game():
@@ -112,12 +117,13 @@ EXPERIMENTS = {   # same order as the RUN_* flags in the original notebook
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="python -m balatro_mdp", description=__doc__,
+    p = argparse.ArgumentParser(prog="balatro-mdp", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("experiments", nargs="*", choices=["demo", "all", *EXPERIMENTS],
                    help="what to run (default: demo)")
     p.add_argument("--plot", action="store_true",
                    help="with regret-table: save regret_vs_calls.png (needs matplotlib)")
+    p.add_argument("--out-dir", default="results", help="where figures are written (default: results/)")
     args = p.parse_args(argv)
     names = args.experiments or ["demo"]
     if "all" in names:
@@ -126,7 +132,7 @@ def main(argv=None):
         if name == "demo":
             demo()
         elif name == "regret-table":
-            regret_table(plot=args.plot)
+            regret_table(plot=args.plot, out_dir=args.out_dir)
         else:
             EXPERIMENTS[name]()
 

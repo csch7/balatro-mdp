@@ -5,10 +5,13 @@ import math
 import random
 import time
 
-from ..mdp import BalatroMDP, Config, Sim, run_episode
-from ..policies import (greedy_policy, greedy_rollout, greedy_smallest_policy, heuristic_policy,
-                        heuristic_rollout)
-from ..uct import UCT, FlatMC
+from ..game.config import Config
+from ..game.mdp import BalatroMDP
+from ..game.simulator import Sim, run_episode
+from ..planners.flat_mc import FlatMC
+from ..planners.uct import UCT
+from ..policies.baselines import (greedy_policy, greedy_rollout, greedy_smallest_policy,
+                                  heuristic_policy, heuristic_rollout)
 
 
 def experiment_full(episodes=100, iters=300, seed=0, target=450):

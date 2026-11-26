@@ -1,4 +1,4 @@
-"""The Balatro Ante-1 MDP: configuration, state, generative model and suit-symmetry key."""
+"""The Balatro Ante-1 MDP: state, generative model, exact transitions and suit-symmetry key."""
 from __future__ import annotations
 
 import itertools
@@ -6,42 +6,8 @@ import random
 from dataclasses import dataclass
 from math import comb
 
+from .config import Config
 from .rules import Action, Card, score_hand
-
-
-@dataclass(frozen=True)
-class Config:
-    ranks: tuple[int, ...] = tuple(range(2, 15))
-    n_suits: int = 4
-    hand_size: int = 8
-    hands: int = 4                 # Balatro defaults: 8-card hand, 4 hands, 3 discards
-    discards: int = 3
-    max_cards: int = 5
-    target: int = 300              # Ante 1 blinds: 300 small, 450 big, 600 boss
-    reward_mode: str = "points"    # "points": reward = score of each play
-    #                                "target": reward = 1 on first reaching target (returns in [0,1])
-
-    def full_deck(self):
-        return tuple(sorted((r, s) for r in self.ranks for s in range(self.n_suits)))
-
-    @staticmethod
-    def small() -> "Config":
-        """14 cards (ranks 8-A, 2 suits), 5-card hand, 2 hands + 1 discard, win = 300.
-        Largest config solved exactly in ~10-20 s per root."""
-        return Config(ranks=tuple(range(8, 15)), n_suits=2, hand_size=5, hands=2,
-                      discards=1, target=300, reward_mode="target")
-
-    @staticmethod
-    def tiny() -> "Config":
-        """12 cards (ranks 9-A, 2 suits), 5-card hand, 2 hands + 1 discard, win = 300."""
-        return Config(ranks=tuple(range(9, 15)), n_suits=2, hand_size=5, hands=2,
-                      discards=1, target=300, reward_mode="target")
-
-    @staticmethod
-    def medium() -> "Config":
-        """21 cards, 3 hands + 2 discards: NOT exactly solvable (~3.6e16 evaluations)."""
-        return Config(ranks=tuple(range(8, 15)), n_suits=3, hand_size=5, hands=3,
-                      discards=2, target=150)
 
 
 @dataclass(frozen=True)
@@ -124,25 +90,3 @@ class BalatroMDP:
             if best is None or key < best:
                 best = key
         return best
-
-
-class Sim:
-    """Black-box generative interface that counts simulator calls."""
-    def __init__(self, mdp: BalatroMDP):
-        self.mdp, self.cfg, self.calls = mdp, mdp.cfg, 0
-
-    def step(self, s, a, rng):
-        self.calls += 1
-        return self.mdp.step(s, a, rng)
-
-    def legal_actions(self, s): return self.mdp.legal_actions(s)
-    def is_terminal(self, s): return self.mdp.is_terminal(s)
-    def canonical(self, s): return self.mdp.canonical(s)
-
-
-def run_episode(mdp: BalatroMDP, policy, rng) -> float:
-    s, total = mdp.initial_state(rng), 0.0
-    while not mdp.is_terminal(s):
-        s, r, _ = mdp.step(s, policy(mdp, s, rng), rng)
-        total += r
-    return total

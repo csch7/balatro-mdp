@@ -4,11 +4,14 @@ from __future__ import annotations
 import random
 import time
 
-from ..exact import ExactSolver, ReferenceSolver, simulate_optimal
-from ..mdp import BalatroMDP, Config, Sim
-from ..policies import greedy_rollout
-from ..sparse import SparseSampling
-from ..uct import UCT
+from ..game.config import Config
+from ..game.mdp import BalatroMDP
+from ..game.simulator import Sim
+from ..planners.sparse_sampling import SparseSampling
+from ..planners.uct import UCT
+from ..policies.baselines import greedy_rollout
+from ..solvers.exact import ExactSolver, simulate_optimal
+from ..solvers.reference import ReferenceSolver
 
 
 def experiment_validation(n_tiny=8, n_small=6, n_ref_small=2, episodes=8000, seed=7):
