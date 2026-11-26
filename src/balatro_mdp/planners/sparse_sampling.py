@@ -1,8 +1,8 @@
 """Sparse sampling planner (Kearns, Mansour & Ng, 2002)."""
 from __future__ import annotations
 
-from .mdp import Sim
-from .rules import Action
+from ..game.rules import Action
+from ..game.simulator import Sim
 
 
 class SparseSampling:

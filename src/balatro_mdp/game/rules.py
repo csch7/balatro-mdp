@@ -1,10 +1,13 @@
-"""Balatro scoring rules: cards, poker-hand evaluation and level-1 chip/mult values."""
+"""Balatro scoring rules: cards, poker-hand evaluation and level-1 chip x mult values."""
 from __future__ import annotations
 
 from collections import Counter
 
 Card = tuple[int, int]                # (rank 2..14 with 14 = Ace, suit index)
+
+
 Action = tuple[str, tuple[int, ...]]  # ("play" | "discard", indices into state.hand)
+
 
 HAND_TABLE = {  # level-1 Balatro hands: (base chips, mult)
     "High Card": (5, 1), "Pair": (10, 2), "Two Pair": (20, 2), "Three of a Kind": (30, 3),

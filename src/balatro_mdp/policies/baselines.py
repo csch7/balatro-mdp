@@ -1,10 +1,12 @@
-"""No-search policies (greedy, discard heuristic), their rollouts, and action ordering for UCT."""
+"""No-search policies: greedy play, the discard heuristic, and their rollouts."""
 from __future__ import annotations
 
 import itertools
 
-from .mdp import BalatroMDP, Config, Sim, State
-from .rules import Action, evaluate, score_hand
+from ..game.config import Config
+from ..game.mdp import State
+from ..game.rules import Action, evaluate, score_hand
+from ..game.simulator import Sim
 
 
 def best_play(cfg: Config, hand):
@@ -72,32 +74,3 @@ def heuristic_rollout(sim: Sim, s: State, rng) -> float:
         s, r, _ = sim.step(s, heuristic_action(sim.cfg, s), rng)
         total += r
     return total
-
-
-def ordered_actions(mdp: BalatroMDP, s: State):
-    """Legal actions ranked best-first for progressive widening.
-      play D    : score of the hand D
-      discard D : best play still available among the kept cards
-    Plays and discards are ranked separately, then interleaved; ties prefer more cards."""
-    n, m = len(s.hand), mdp.cfg.max_cards
-    sub = {}
-    for size in range(1, min(m, n) + 1):
-        for idx in itertools.combinations(range(n), size):
-            sub[sum(1 << i for i in idx)] = score_hand([s.hand[i] for i in idx])
-    best = [0] * (1 << n)                       # best[mask] = best play inside mask
-    for mask in range(1, 1 << n):
-        b = sub.get(mask, 0)
-        for i in range(n):
-            if mask >> i & 1:
-                b = max(b, best[mask & ~(1 << i)])
-        best[mask] = b
-    full = (1 << n) - 1
-    acts = mdp.legal_actions(s)
-    mask_of = lambda a: sum(1 << i for i in a[1])
-    plays = sorted((a for a in acts if a[0] == "play"), key=lambda a: (-sub[mask_of(a)], -len(a[1])))
-    discs = sorted((a for a in acts if a[0] == "discard"),
-                   key=lambda a: (-best[full & ~mask_of(a)], -len(a[1])))
-    out = []
-    for p, d in itertools.zip_longest(plays, discs):
-        out += [x for x in (p, d) if x is not None]
-    return out
