@@ -51,8 +51,12 @@ ABLATIONS = {   # name -> UCT keyword overrides (everything else = the reported 
 }
 
 
-def experiment_ablation(episodes=100, iters=300, seed=0, target=450, variants=None):
-    mdp = BalatroMDP(Config(reward_mode="target", target=target))
+def experiment_ablation(cfg: Config, episodes=100, iters=300, seed=0, variants=None):
+    """Baselines, then UCT with one ABLATIONS entry applied at a time (default: all of them)."""
+    unknown = set(variants or ()) - set(ABLATIONS)
+    if unknown:
+        raise ValueError(f"unknown ablation(s) {sorted(unknown)}; choose from {list(ABLATIONS)}")
+    mdp = BalatroMDP(cfg)
     w = sum(run_episode(mdp, greedy_policy, random.Random(seed * 100_000 + ep)) for ep in range(episodes))
     p = w / episodes
     print(f"{'greedy play':32s} win={p:.3f} +/- {math.sqrt(p * (1 - p) / episodes):.3f}", flush=True)

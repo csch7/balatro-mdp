@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import random
 import time
+from dataclasses import replace
 
 from game.config import Config
 from game.mdp import BalatroMDP
@@ -14,17 +15,18 @@ from solvers.exact import ExactSolver, simulate_optimal
 from solvers.reference import ReferenceSolver
 
 
-def experiment_validation(n_tiny=8, n_small=6, n_ref_small=2, episodes=8000, seed=7):
+def experiment_validation(tiny_cfg: Config, small_cfg: Config, n_tiny=8, n_small=6, n_ref_small=2,
+                          episodes=8000, seed=7):
     """(i) ExactSolver vs ReferenceSolver; (ii) executing the optimal policy matches V*."""
     rng = random.Random(seed)
-    mdp = BalatroMDP(Config.tiny()); fast, ref = ExactSolver(mdp), ReferenceSolver(mdp)
+    mdp = BalatroMDP(tiny_cfg); fast, ref = ExactSolver(mdp), ReferenceSolver(mdp)
     worst = 0.0
     for _ in range(n_tiny):
         s = mdp.initial_state(rng)
         a = fast.solve(s)
         worst = max(worst, max(abs(a[k] - ref.q(s, k)) for k in a))
     print(f"independent solver, {n_tiny} tiny roots: max |dQ| = {worst:.1e}", flush=True)
-    mdp = BalatroMDP(Config.small()); solver = ExactSolver(mdp); ref = ReferenceSolver(mdp)
+    mdp = BalatroMDP(small_cfg); solver = ExactSolver(mdp); ref = ReferenceSolver(mdp)
     zs, t0 = [], time.time()
     for i in range(n_small):
         s0 = mdp.initial_state(rng)
@@ -38,29 +40,33 @@ def experiment_validation(n_tiny=8, n_small=6, n_ref_small=2, episodes=8000, see
     print(f"mean z = {sum(zs) / len(zs):+.2f} (should be ~0 with sd ~1); max |z| = {max(abs(z) for z in zs):.2f}")
 
 
-def experiment_tiny_diagnostics(seed=0):
-    """12-card variant: (i) sparse sampling ties at C=1; (ii) UCT convergence on shallower variants."""
-    base = Config.tiny()
+def experiment_tiny_diagnostics(base: Config, seed=0, n_states=10,
+                                sparse=((3, 1, False), (2, 1, True), (2, 4, True)),
+                                variants=((1, 1, 200), (2, 0, 300), (2, 1, 300)),
+                                uct_iters=(1000, 8000), c=0.2, n_roots=6):
+    """Small-deck diagnostics: (i) sparse sampling ties at C=1; (ii) UCT convergence on shallower
+    variants of `base`, each given as (hands, discards, target)."""
     mdp = BalatroMDP(base); sim = Sim(mdp); rng = random.Random(seed)
-    states = [mdp.initial_state(rng) for _ in range(10)]
+    states = [mdp.initial_state(rng) for _ in range(n_states)]
     print("Sparse sampling: number of root actions tied for the maximum estimate")
-    for H, C, leaf in ((3, 1, None), (2, 1, greedy_rollout), (2, 4, greedy_rollout)):
+    for H, C, use_leaf in sparse:
+        leaf = greedy_rollout if use_leaf else None
         ties = []
         for s in states:
             qs = SparseSampling(sim, C=C, H=H, leaf=leaf).q_values(s, rng)
             top = max(q for _, q in qs)
             ties.append(sum(q == top for _, q in qs))
         print(f"  H={H} C={C}: mean {sum(ties) / len(ties):.1f} of {len(qs)} actions tied")
-    print("UCT (c=0.2): regret and bias of the chosen action's estimate, 6 roots")
-    for hands, disc in ((1, 1), (2, 0), (2, 1)):
-        cfg = Config(**{**base.__dict__, "hands": hands, "discards": disc, "target": 200 if hands == 1 else 300})
+    print(f"UCT (c={c}): regret and bias of the chosen action's estimate, {n_roots} roots")
+    for hands, disc, target in variants:
+        cfg = replace(base, hands=hands, discards=disc, target=target)
         m2 = BalatroMDP(cfg); sol = ExactSolver(m2); s2 = Sim(m2); r2 = random.Random(2)
-        roots = [m2.initial_state(r2) for _ in range(6)]
-        for n in (1000, 8000):
+        roots = [m2.initial_state(r2) for _ in range(n_roots)]
+        for n in uct_iters:
             reg, bias = [], []
             for s in roots:
                 q = sol.solve(s); v = max(q.values())
-                node = UCT(s2, n_iter=n, c=0.2).search(s, r2)
+                node = UCT(s2, n_iter=n, c=c).search(s, r2)
                 mv = max(range(len(node.actions)), key=lambda i: node.Na[i]); a = node.actions[mv]
                 reg.append(v - q[a]); bias.append(node.Wa[mv] / node.Na[mv] - q[a])
-            print(f"  hands={hands} discards={disc} n={n}: regret={sum(reg) / 6:.3f}  bias={sum(bias) / 6:+.3f}", flush=True)
+            print(f"  hands={hands} discards={disc} n={n}: regret={sum(reg) / n_roots:.3f}  bias={sum(bias) / n_roots:+.3f}", flush=True)

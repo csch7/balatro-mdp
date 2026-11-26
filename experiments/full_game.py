@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 import random
 import time
+from dataclasses import replace
 
 from game.config import Config
 from game.mdp import BalatroMDP
@@ -14,9 +15,9 @@ from policies.baselines import (greedy_policy, greedy_rollout, greedy_smallest_p
                                   heuristic_policy, heuristic_rollout)
 
 
-def experiment_full(episodes=100, iters=300, seed=0, target=450):
-    """P(reach target) on the real 52-card game: greedy-play vs UCT, same initial hands."""
-    mdp = BalatroMDP(Config(reward_mode="target", target=target))
+def experiment_full(cfg: Config, episodes=100, iters=300, seed=0):
+    """P(reach cfg.target): greedy-play vs UCT, same initial hands. cfg needs reward_mode='target'."""
+    mdp, target = BalatroMDP(cfg), cfg.target
     sim = Sim(mdp); uct = UCT(sim, n_iter=iters)
     wins, t0 = {"greedy-play": 0, "UCT": 0}, time.time()
     for ep in range(episodes):
@@ -29,8 +30,8 @@ def experiment_full(episodes=100, iters=300, seed=0, target=450):
         print(f"{name:12s} P(reach {target}) = {p:.3f} +/- {math.sqrt(p * (1 - p) / episodes):.3f}")
 
 
-def experiment_baselines(games=1500, targets=(300, 450, 600), seed=11):
-    """No-search policies on the full game at each Ante-1 blind (fresh starting hands)."""
+def experiment_baselines(cfg: Config, games=1500, targets=(300, 450, 600), seed=11):
+    """No-search policies at each target (Ante-1 blinds by default), fresh starting hands."""
     pols = {
         "greedy, smallest best subset (bad tie-break)": greedy_smallest_policy,
         "greedy, no discards (5-card plays)": greedy_policy,
@@ -39,7 +40,7 @@ def experiment_baselines(games=1500, targets=(300, 450, 600), seed=11):
         "discard junk if <= Two Pair": heuristic_policy(("High Card", "Pair", "Two Pair")),
     }
     for tgt in targets:
-        mdp = BalatroMDP(Config(reward_mode="target", target=tgt))
+        mdp = BalatroMDP(replace(cfg, target=tgt))
         print(f"\nTarget {tgt}  ({games} games each)")
         for name, pol in pols.items():
             w = sum(run_episode(mdp, pol, random.Random(seed * 1_000_000 + ep)) for ep in range(games))
@@ -47,9 +48,9 @@ def experiment_baselines(games=1500, targets=(300, 450, 600), seed=11):
             print(f"  {name:46s} {p:.3f} +/- {math.sqrt(p * (1 - p) / games):.3f}", flush=True)
 
 
-def experiment_search(episodes=100, iters=300, target=450, seed=0, methods=None):
+def experiment_search(cfg: Config, episodes=100, iters=300, seed=0, methods=None):
     """Search vs the discard heuristic on the same starting hands; paired difference vs heuristic."""
-    mdp = BalatroMDP(Config(reward_mode="target", target=target))
+    mdp = BalatroMDP(cfg)
     makers = {
         "greedy, no discards": lambda: (None, None),
         "discard heuristic (no search)": lambda: (None, None),

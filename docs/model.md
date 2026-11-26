@@ -19,7 +19,7 @@ Simplifications compared with real Balatro: one blind of Ante 1, no jokers, taro
 | `Config.small()` | 14 cards (8 to A, 2 suits) | 5 | 2 / 1 | yes, about 10 to 20 s per root |
 | `Config.tiny()` | 12 cards (9 to A, 2 suits) | 5 | 2 / 1 | yes, a few seconds |
 
-`solvers/exact.py: tree_size` gives these bounds, and `ExactSolver.solve` raises `TooBig` above 5 x 10^8.
+`solvers/exact.py: tree_size` gives these bounds, and `ExactSolver.solve` raises `TooBig` above 5 x 10^8. In a config file, a `game` section picks one of these with `preset` and overrides any field, for example `{preset: full, ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 14]}` for a 40-card Abandoned Deck.
 
 ## Methods
 
@@ -31,7 +31,7 @@ Simplifications compared with real Balatro: one blind of Ante 1, no jokers, taro
 
 ## Experiments
 
-| `main.py` name | Module | What it measures |
+| `main.py` name (config in `configs/`) | Module | What it measures |
 |---|---|---|
 | `regret-table` | `experiments/regret.py` | regret V*(s) - Q*(s, a) on `Config.small()` vs simulator calls (Table 2, regret plot) |
 | `full-game` | `experiments/full_game.py` | greedy vs UCT win rate on the 52-card Big Blind |

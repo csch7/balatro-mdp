@@ -1,2 +1,3 @@
+pyyaml      # config files
 matplotlib  # only for --plot
 pytest      # only for tests

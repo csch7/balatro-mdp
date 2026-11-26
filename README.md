@@ -10,9 +10,10 @@ See [docs/model.md](docs/model.md) for the model and methods.
 ```
 balatro-mdp/
 ├── main.py                  command line for the demo and experiments (replaces the notebook's RUN_* flags)
+├── configs/                 one YAML file per experiment: game settings + run parameters
 ├── game/
 │   ├── rules.py             cards, hand evaluation, chips x mult scoring
-│   ├── config.py            Config: full game and small/tiny/medium toy decks
+│   ├── config.py            Config: full game and small/tiny/medium presets, config_from_dict
 │   ├── mdp.py               State, BalatroMDP (step, transitions, canonical)
 │   └── simulator.py         Sim (counts simulator calls), run_episode
 ├── policies/
@@ -34,22 +35,47 @@ balatro-mdp/
 ├── tests/                   rules, MDP, solvers, planners
 ├── docs/model.md            the MDP, configurations, methods and experiments
 ├── results/                 experiment outputs (figures, logs)
-└── requirements.txt         matplotlib (plots) and pytest (tests); the code itself needs only the standard library
+└── requirements.txt         pyyaml (configs), matplotlib (plots), pytest (tests)
 ```
 
 ## Running
 
-Python 3.10+, run from the repository root.
+Python 3.10+, run from the repository root after `pip install -r requirements.txt`.
 
 ```
 python main.py                            # quick demo (~15 s)
 python main.py regret-table --plot        # Table 2 + results/regret_vs_calls.png (~5 min)
 python main.py full-game baselines        # several experiments, in order
 python main.py all                        # everything (2-3 hours on one core)
-pytest                                    # tests (pip install -r requirements.txt)
+pytest
 ```
 
-Experiments: `regret-table`, `full-game`, `baselines`, `search`, `validation`, `tiny-diagnostics`, `ablation`.
+Experiments: `demo`, `regret-table`, `full-game`, `baselines`, `search`, `validation`, `tiny-diagnostics`, `ablation`.
+
+## Configs
+
+Each experiment reads `configs/<experiment>.yaml` (dashes become underscores), and the defaults reproduce the paper's numbers.
+A file has a `game` section and a `params` section:
+
+```yaml
+# configs/full_game.yaml
+game:
+  preset: full          # full | small | tiny | medium (see game/config.py)
+  reward_mode: target   # any other key overrides that Config field
+  target: 450
+params:
+  episodes: 100
+  iters: 300
+  seed: 0
+```
+
+To change a run, edit the file, point at your own file, or override single values:
+
+```
+python main.py full-game --config my_run.yaml
+python main.py full-game --set params.episodes=20 --set game.target=600
+python main.py full-game --set "game.ranks=[2, 3, 4, 5, 6, 7, 8, 9, 10, 14]"   # Abandoned Deck (40 cards)
+```
 
 Library use:
 

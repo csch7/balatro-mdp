@@ -1,0 +1,13 @@
+# Exact-solver validation (~5 min): ExactSolver vs ReferenceSolver on tiny roots,
+# and simulated optimal play vs V* on small roots.
+
+tiny_game:
+  preset: tiny
+small_game:
+  preset: small
+params:
+  n_tiny: 8
+  n_small: 6
+  n_ref_small: 2            # small roots also cross-checked with ReferenceSolver (slow)
+  episodes: 8000
+  seed: 7

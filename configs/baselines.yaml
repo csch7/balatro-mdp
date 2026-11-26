@@ -1,0 +1,9 @@
+# No-search policies on the full game at each Ante-1 blind (~1-10 min).
+
+game:
+  preset: full
+  reward_mode: target
+params:
+  games: 1500
+  targets: [300, 450, 600]  # small, big and boss blind
+  seed: 11
