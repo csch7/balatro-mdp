@@ -1,92 +1,39 @@
-"""Experiments on the real 52-card game: greedy vs UCT, no-search baselines, search vs heuristic."""
+"""Win-rate experiments on a full deck: greedy vs UCT, no-search baselines, search vs heuristic."""
 from __future__ import annotations
 
-import math
-import random
-import time
 from dataclasses import replace
 
-from game.config import Config
-from game.mdp import BalatroMDP
-from game.simulator import Sim, run_episode
-from planners.flat_mc import FlatMC
-from planners.uct import UCT
-from policies.baselines import (greedy_policy, greedy_rollout, greedy_smallest_policy,
-                                  heuristic_policy, heuristic_rollout)
+from game.config import config_from_dict
+
+from .compare import compare_policies
 
 
-def experiment_full(cfg: Config, episodes=100, iters=300, seed=0):
-    """P(reach cfg.target): greedy-play vs UCT, same initial hands. cfg needs reward_mode='target'."""
-    mdp, target = BalatroMDP(cfg), cfg.target
-    sim = Sim(mdp); uct = UCT(sim, n_iter=iters)
-    wins, t0 = {"greedy-play": 0, "UCT": 0}, time.time()
-    for ep in range(episodes):
-        for name, pol in (("greedy-play", greedy_policy), ("UCT", lambda m, s, r: uct.plan(s, r))):
-            wins[name] += run_episode(mdp, pol, random.Random(seed * 100_000 + ep))
-        if (ep + 1) % 10 == 0:
-            print(f"  {ep + 1}/{episodes} episodes, {time.time() - t0:.0f}s", flush=True)
-    for name, w in wins.items():
-        p = w / episodes
-        print(f"{name:12s} P(reach {target}) = {p:.3f} +/- {math.sqrt(p * (1 - p) / episodes):.3f}")
+def run_full_game(conf, out_dir):
+    """configs/full_game.yaml: every method on the same games at one target."""
+    cfg = config_from_dict(conf["game"])
+    print(f"Win rate on the {conf['game'].get('deck', 'standard')} deck, target {cfg.target}:")
+    rows = compare_policies(cfg, conf["methods"], **conf["params"])
+    return {"rows": rows}
 
 
-def experiment_baselines(cfg: Config, games=1500, targets=(300, 450, 600), seed=11):
-    """No-search policies at each target (Ante-1 blinds by default), fresh starting hands."""
-    pols = {
-        "greedy, smallest best subset (bad tie-break)": greedy_smallest_policy,
-        "greedy, no discards (5-card plays)": greedy_policy,
-        "discard junk if High Card": heuristic_policy(("High Card",)),
-        "discard junk if High Card/Pair": heuristic_policy(("High Card", "Pair")),
-        "discard junk if <= Two Pair": heuristic_policy(("High Card", "Pair", "Two Pair")),
-    }
+def run_baselines(conf, out_dir):
+    """configs/baselines.yaml: no-search methods at each target."""
+    cfg = config_from_dict(conf["game"])
+    params = dict(conf["params"])
+    targets = params.pop("targets")
+    rows = []
     for tgt in targets:
-        mdp = BalatroMDP(replace(cfg, target=tgt))
-        print(f"\nTarget {tgt}  ({games} games each)")
-        for name, pol in pols.items():
-            w = sum(run_episode(mdp, pol, random.Random(seed * 1_000_000 + ep)) for ep in range(games))
-            p = w / games
-            print(f"  {name:46s} {p:.3f} +/- {math.sqrt(p * (1 - p) / games):.3f}", flush=True)
+        print(f"\nTarget {tgt} ({params['episodes']} games each)")
+        rows += compare_policies(replace(cfg, target=tgt), conf["methods"], **params)
+    return {"rows": rows}
 
 
-def experiment_search(cfg: Config, episodes=100, iters=300, seed=0, methods=None):
-    """Search vs the discard heuristic on the same starting hands; paired difference vs heuristic."""
-    mdp = BalatroMDP(cfg)
-    makers = {
-        "greedy, no discards": lambda: (None, None),
-        "discard heuristic (no search)": lambda: (None, None),
-        "UCT, greedy rollouts": lambda: _planner(mdp, UCT, iters, greedy_rollout),
-        "UCT, heuristic rollouts": lambda: _planner(mdp, UCT, iters, heuristic_rollout),
-        "flat MC, heuristic rollouts": lambda: _planner(mdp, FlatMC, iters, heuristic_rollout),
-    }
-    names = methods or list(makers)
-    outcomes = {}
-    for name in names:
-        plan, sim = makers[name]()
-        t0, res = time.time(), []
-        for ep in range(episodes):
-            rng = random.Random(seed * 100_000 + ep)
-            if name == "greedy, no discards":
-                res.append(run_episode(mdp, greedy_policy, rng))
-            elif name == "discard heuristic (no search)":
-                res.append(run_episode(mdp, heuristic_policy(), rng))
-            else:
-                res.append(run_episode(mdp, lambda m, s, r: plan.plan(s, r), rng))
-        outcomes[name] = res
-        p = sum(res) / episodes
-        extra = f"{(time.time() - t0) / episodes:5.1f}s/game  {sim.calls / episodes:7.0f} calls/game" if sim else ""
-        line = f"{name:32s} win={p:.3f} +/- {math.sqrt(p * (1 - p) / episodes):.3f}  {extra}"
-        ref = outcomes.get("discard heuristic (no search)")
-        if ref and name != "discard heuristic (no search)":
-            d = [a - b for a, b in zip(res, ref)]
-            md = sum(d) / episodes
-            sd = math.sqrt(sum((x - md) ** 2 for x in d) / (episodes - 1) / episodes)
-            line += f"  vs heuristic: {md:+.3f} +/- {sd:.3f}"
-        print(line, flush=True)
-    return outcomes
-
-
-def _planner(mdp, cls, iters, rollout):
-    sim = Sim(mdp)
-    if cls is UCT:
-        return UCT(sim, n_iter=iters, rollout=rollout), sim
-    return FlatMC(sim, m=20, n=max(iters // 20, 1), rollout=rollout), sim     # same iteration budget
+def run_search(conf, out_dir):
+    """configs/search.yaml: search methods vs a reference method, one block per entry in `runs`."""
+    cfg = config_from_dict(conf["game"])
+    rows = []
+    for run in conf["runs"]:
+        print(f"\nTarget {run['target']} ({run['episodes']} games), paired against {conf['reference']!r}:")
+        rows += compare_policies(replace(cfg, target=run["target"]), conf["methods"], run["episodes"],
+                                 conf["params"]["seed"], reference=conf["reference"])
+    return {"rows": rows}

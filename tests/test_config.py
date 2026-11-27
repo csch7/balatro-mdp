@@ -4,7 +4,9 @@ from pathlib import Path
 import pytest
 
 from game import available_decks, config_from_dict, deck_config, load_deck
-from main import EXPERIMENTS, load_config
+from experiments import EXPERIMENTS
+from game import load_scoring
+from main import load_config
 
 CONFIGS = Path(__file__).resolve().parent.parent / "configs"
 
@@ -53,3 +55,14 @@ def test_every_experiment_has_a_valid_config(name):
 def test_set_override():
     conf = load_config(CONFIGS / "full_game.yaml", ["params.episodes=5", "game.deck=red"])
     assert conf["params"]["episodes"] == 5 and config_from_dict(conf["game"]).discards == 4
+
+
+def test_scoring_file():
+    table = load_scoring("level1")
+    assert table["Pair"] == (10, 2) and len(table) == 9
+    assert deck_config("standard").hand_table == table
+
+
+def test_set_override_into_a_list():
+    conf = load_config(CONFIGS / "full_game.yaml", ["methods.1.iters=20"])
+    assert conf["methods"][1]["iters"] == 20

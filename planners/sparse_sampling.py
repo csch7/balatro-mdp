@@ -2,21 +2,23 @@
 from __future__ import annotations
 
 from game.rules import Action
-from game.simulator import Sim
+from game.simulator import Sim, rollout
+from policies.base import Policy
 
 
-class SparseSampling:
+class SparseSampling(Policy):
     """Depth-H lookahead tree: every action at every node, C sampled next states each.
-    Cost O((k*C)^H) simulator calls per decision, independent of |S|.
-    Finite-horizon, undiscounted. `leaf(sim, s, rng)` replaces the zero leaf value."""
-    def __init__(self, sim: Sim, C: int = 1, H: int | None = None, leaf=None):
-        self.sim, self.C, self.H, self.leaf = sim, C, H, leaf
+    Cost O((k*C)^H) simulator calls per decision, independent of |S|. Finite-horizon,
+    undiscounted. Leaves at depth H are valued by a rollout of `leaf_policy` (None = 0);
+    H=None looks ahead to the end of the round."""
+    def __init__(self, sim: Sim, leaf_policy: Policy | None = None, C: int = 1, H: int | None = None):
+        self.sim, self.leaf_policy, self.C, self.H = sim, leaf_policy, C, H
 
     def _v(self, s, h, rng):
         if self.sim.is_terminal(s):
             return 0.0
         if h == 0:
-            return self.leaf(self.sim, s, rng) if self.leaf else 0.0
+            return rollout(self.sim, s, self.leaf_policy, rng)
         return max(q for _, q in self.q_values(s, rng, h))
 
     def q_values(self, s, rng, h=None):
@@ -30,5 +32,5 @@ class SparseSampling:
             out.append((a, tot / self.C))
         return out
 
-    def plan(self, s, rng) -> Action:
+    def act(self, s, rng) -> Action:
         return max(self.q_values(s, rng), key=lambda t: t[1])[0]

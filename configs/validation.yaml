@@ -13,5 +13,9 @@ params:
   n_tiny: 8
   n_small: 6
   n_ref_small: 2            # small roots also cross-checked with ReferenceSolver (slow)
-  episodes: 8000
-  seed: 7
+  episodes: 8000            # simulated games per small root
+  seed: 7                   # draws the roots
+  sim_seed: 100             # small root i is simulated with seed sim_seed + i
+limits:
+  max_tree: 500000000       # ExactSolver limit
+  max_outcomes: 200000      # ReferenceSolver: largest draw distribution it enumerates

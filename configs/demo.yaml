@@ -1,24 +1,24 @@
-# Quick demo (~15 s): feasibility table, exact solve of one small-deck root,
-# and the regret of three planners on that root.
+# Quick demo (~15 s): decision-tree sizes, an exact solve of one starting hand, a simulation
+# check of the optimal policy, and a few methods' regret on that hand.
 #
-# `game` sections: `deck` names a file in configs/decks/, and any other key sets or
-# overrides that Config field (target, reward_mode, max_cards, or a deck setting such as
-# hands or discards).
+# `game` sections: `deck` names a file in configs/decks/, and any other key sets or overrides
+# that Config field (target, reward_mode, max_cards, scoring, or a deck setting such as hands).
+# Methods are specs for planners/registry.py (see the docstring there).
 
 game:
   deck: small
   reward_mode: target
   target: 300
-seed: 42                    # draws the starting hand
+seed: 42                    # draws the starting hand and drives the planners
 optimal_episodes: 20000     # simulated games to check the optimal policy against V*
-uct:
-  iters: 1600
-  reps: 6
-sparse:
-  H: 2
-  C: 4
-  greedy_leaf: true
-  reps: 3
+optimal_seed: 1
+limits:
+  max_tree: 500000000       # ExactSolver refuses decks whose decision tree is bigger
+
+methods:                    # each is run `reps` times on the same hand
+  - {label: greedy-play, type: greedy}
+  - {label: UCT 1600 iters, type: uct, iters: 1600, reps: 6}
+  - {label: sparse H=2 C=4 +greedy leaf, type: sparse, H: 2, C: 4, leaf: greedy, reps: 3}
 
 feasibility:                # decks in the decision-tree size table
   - {name: "21 cards, 3 hands, 2 discards", deck: medium}

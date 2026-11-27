@@ -1,5 +1,5 @@
-# UCT ablations on the full game, Big Blind (~45 min). Delete lines from `variants`
-# to run fewer; names must match ABLATIONS in experiments/ablation.py.
+# UCT ablations, Big Blind (~45 min): the reported UCT settings (`uct`) with one change per
+# variant, plus the no-search baselines, all on the same games. Delete variants to run fewer.
 
 game:
   deck: standard
@@ -7,15 +7,19 @@ game:
   target: 450
 params:
   episodes: 100
-  iters: 300
   seed: 0
-  variants:
-    - full (reported)
-    - plain key (no suit merging)
-    - no progressive widening
-    - random action order
-    - zero leaf value (no rollout)
-    - random rollout
-    - c = 0.25
-    - c = 2.0
-    - 100 iterations
+baselines:
+  - {label: greedy play, type: greedy}
+  - {label: discard heuristic (no search), type: heuristic}
+uct: {type: uct, iters: 300, c: 1.0, rollout: greedy, widen: true, widen_c: 2.0, widen_alpha: 0.5,
+      key: canonical, action_order: ordered}
+variants:                   # name -> settings that differ from `uct`
+  full (reported): {}
+  plain key (no suit merging): {key: plain}
+  no progressive widening: {widen: false}
+  random action order: {action_order: shuffled}
+  zero leaf value (no rollout): {rollout: null}
+  random rollout: {rollout: random}
+  c = 0.25: {c: 0.25}
+  c = 2.0: {c: 2.0}
+  100 iterations: {iters: 100}

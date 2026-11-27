@@ -1,0 +1,13 @@
+# Level-1 Balatro poker hands: [base chips, mult]. Score = (base chips + chips of scoring cards) x mult.
+# Copy this file to model upgraded hand levels (Planet cards) and pick it with `game.scoring`.
+name: Level 1 hands
+hands:
+  High Card: [5, 1]
+  Pair: [10, 2]
+  Two Pair: [20, 2]
+  Three of a Kind: [30, 3]
+  Straight: [30, 4]
+  Flush: [35, 4]
+  Full House: [40, 4]
+  Four of a Kind: [60, 7]
+  Straight Flush: [100, 8]

@@ -13,7 +13,7 @@ def test_transitions_sum_to_one():
     mdp = BalatroMDP(deck_config("tiny", reward_mode="target"))
     s = mdp.initial_state(random.Random(1))
     a = ("discard", (0, 1))
-    assert abs(sum(p for p, _, _ in mdp.transitions(s, a)) - 1.0) < 1e-12
+    assert abs(sum(p for p, _, _ in mdp.transitions(s, a, 200_000)) - 1.0) < 1e-12
 
 
 def test_canonical_ignores_suit_relabeling():

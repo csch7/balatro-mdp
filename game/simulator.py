@@ -1,4 +1,4 @@
-"""Black-box simulator wrapper that counts generative-model calls, and an episode runner."""
+"""Black-box simulator wrapper that counts generative-model calls, and rollouts on it."""
 from __future__ import annotations
 
 from .mdp import BalatroMDP
@@ -18,9 +18,12 @@ class Sim:
     def canonical(self, s): return self.mdp.canonical(s)
 
 
-def run_episode(mdp: BalatroMDP, policy, rng) -> float:
-    s, total = mdp.initial_state(rng), 0.0
-    while not mdp.is_terminal(s):
-        s, r, _ = mdp.step(s, policy(mdp, s, rng), rng)
+def rollout(sim: Sim, s, policy, rng) -> float:
+    """Return of following `policy` from s in the simulator (sampled draws). policy=None gives 0."""
+    if policy is None:
+        return 0.0
+    total = 0.0
+    while not sim.is_terminal(s):
+        s, r, _ = sim.step(s, policy.act(s, rng), rng)
         total += r
     return total

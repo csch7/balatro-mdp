@@ -13,7 +13,7 @@ from .rules import Action, Card, score_hand
 @dataclass(frozen=True)
 class State:
     hand: tuple[Card, ...]      # sorted
-    deck: tuple[Card, ...]      # undrawn cards, stored as a sorted set
+    deck: tuple[Card, ...]      # undrawn cards, stored as a sorted set (order unknown to the player)
     hands_left: int
     discards_left: int
     score: int                  # tracked (capped at target) only in "target" mode, else 0
@@ -24,6 +24,7 @@ class BalatroMDP:
         self.cfg = cfg
 
     def initial_state(self, rng: random.Random) -> State:
+        """A random starting state (used to sample roots; real games use game.episode.Episode)."""
         deck = list(self.cfg.full_deck())
         hand = rng.sample(deck, self.cfg.hand_size)
         rest = [c for c in deck if c not in hand]
@@ -45,11 +46,11 @@ class BalatroMDP:
                 for idx in itertools.combinations(range(len(s.hand)), n)]
 
     def _apply(self, s: State, a: Action):
-        """Deterministic part of a transition."""
+        """Deterministic part of a transition: (kept cards, hands, discards, score, reward, cards to draw)."""
         kind, idx = a
         chosen = [s.hand[i] for i in idx]
         kept = [c for i, c in enumerate(s.hand) if i not in idx]
-        pts = score_hand(chosen) if kind == "play" else 0
+        pts = score_hand(chosen, self.cfg.hand_table) if kind == "play" else 0
         hl = s.hands_left - 1 if kind == "play" else s.hands_left
         dl = s.discards_left if kind == "play" else s.discards_left - 1
         if self.cfg.reward_mode == "target":
@@ -60,20 +61,27 @@ class BalatroMDP:
         k = min(len(chosen), len(s.deck))       # refill the hand; it shrinks if the deck runs out
         return kept, hl, dl, new_score, reward, k
 
-    def step(self, s: State, a: Action, rng: random.Random):
-        """Generative model G(s, a) -> (s', r, done)."""
-        kept, hl, dl, sc, r, k = self._apply(s, a)
-        drawn = rng.sample(s.deck, k)
-        deck = [c for c in s.deck if c not in drawn]
-        ns = State(tuple(sorted(kept + drawn)), tuple(deck), hl, dl, sc)
+    def draw_count(self, s: State, a: Action) -> int:
+        """How many cards action a draws from the deck."""
+        return min(len(a[1]), len(s.deck))
+
+    def apply_draw(self, s: State, a: Action, drawn):
+        """Next state when action a is followed by drawing exactly `drawn`: (s', r, done)."""
+        kept, hl, dl, sc, r, _ = self._apply(s, a)
+        deck = tuple(c for c in s.deck if c not in drawn)
+        ns = State(tuple(sorted(kept + list(drawn))), deck, hl, dl, sc)
         return ns, r, self.is_terminal(ns)
 
-    def transitions(self, s: State, a: Action, max_outcomes: int = 200_000):
-        """Exact next-state distribution (small decks only)."""
+    def step(self, s: State, a: Action, rng: random.Random):
+        """Generative model G(s, a) -> (s', r, done): the draw is sampled uniformly from s.deck."""
+        return self.apply_draw(s, a, rng.sample(s.deck, self.draw_count(s, a)))
+
+    def transitions(self, s: State, a: Action, max_outcomes: int):
+        """Exact next-state distribution [(p, s', r)] (small decks only)."""
         kept, hl, dl, sc, r, k = self._apply(s, a)
         n_out = comb(len(s.deck), k)
         if n_out > max_outcomes:
-            raise ValueError(f"{n_out} outcomes: use a smaller deck or sample with step()")
+            raise ValueError(f"{n_out} outcomes > {max_outcomes}: use a smaller deck or sample with step()")
         out = []
         for drawn in itertools.combinations(s.deck, k):
             deck = tuple(c for c in s.deck if c not in drawn)
@@ -90,3 +98,8 @@ class BalatroMDP:
             if best is None or key < best:
                 best = key
         return best
+
+    @staticmethod
+    def plain_key(s: State):
+        """State key without suit-symmetry reduction."""
+        return (s.hand, s.deck, s.hands_left, s.discards_left, s.score)

@@ -46,13 +46,13 @@ class TooBig(Exception):
 class ExactSolver:
     """V_t(s) = max_a [ r(s,a) + E_draw V_{t+1}(s') ], memoized over reachable states,
     with suit-symmetry merging, no draw enumeration for episode-ending plays, and a closed
-    form for (hands_left=1, discards_left=0)."""
-    def __init__(self, mdp: BalatroMDP, max_tree: float = 5e8):
+    form for (hands_left=1, discards_left=0). solve() refuses decks whose tree_size > max_tree."""
+    def __init__(self, mdp: BalatroMDP, max_tree: float):
         self.mdp, self.cfg, self.max_tree, self.memo = mdp, mdp.cfg, max_tree, {}
 
     def _best_play_reward(self, s: State) -> float:
         m = min(self.cfg.max_cards, len(s.hand))
-        best = max(score_hand([s.hand[i] for i in idx])
+        best = max(score_hand([s.hand[i] for i in idx], self.cfg.hand_table)
                    for idx in itertools.combinations(range(len(s.hand)), m))
         if self.cfg.reward_mode == "target":
             return 1.0 if s.score + best >= self.cfg.target else 0.0
