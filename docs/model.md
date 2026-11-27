@@ -10,16 +10,23 @@
 
 Simplifications compared with real Balatro: one blind of Ante 1, no jokers, tarot/planet cards, money, shop or hand levels.
 
-## Configurations
+## Decks
 
-| Config | Deck | Hand | Hands / discards | Exact solve |
+Decks are YAML files in `configs/decks/`:
+
+| Deck | Cards | Hand | Hands / discards | Exact solve |
 |---|---|---|---|---|
-| `Config()` | 52 cards | 8 | 4 / 3 | no (about 10^46 evaluations) |
-| `Config.medium()` | 21 cards | 5 | 3 / 2 | no (about 3.6 x 10^16) |
-| `Config.small()` | 14 cards (8 to A, 2 suits) | 5 | 2 / 1 | yes, about 10 to 20 s per root |
-| `Config.tiny()` | 12 cards (9 to A, 2 suits) | 5 | 2 / 1 | yes, a few seconds |
+| `standard` | 52 | 8 | 4 / 3 | no (about 10^46 evaluations) |
+| `red`, `blue`, `black` | 52 | 8 | 4 / 4, 5 / 3, 3 / 3 | no |
+| `painted` | 52 | 10 | 4 / 3 | no |
+| `abandoned` | 40 (no J, Q, K) | 8 | 4 / 3 | no (about 6 x 10^39) |
+| `medium` | 21 (8 to A, 3 suits) | 5 | 3 / 2 | no (about 3.6 x 10^16) |
+| `small` | 14 (8 to A, 2 suits) | 5 | 2 / 1 | yes, about 10 to 20 s per root |
+| `tiny` | 12 (9 to A, 2 suits) | 5 | 2 / 1 | yes, a few seconds |
 
-`solvers/exact.py: tree_size` gives these bounds, and `ExactSolver.solve` raises `TooBig` above 5 x 10^8. In a config file, a `game` section picks one of these with `preset` and overrides any field, for example `{preset: full, ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 14]}` for a 40-card Abandoned Deck.
+`solvers/exact.py: tree_size` gives these bounds, and `ExactSolver.solve` raises `TooBig` above 5 x 10^8.
+An experiment's `game` section picks a deck and sets the blind, for example
+`{deck: abandoned, reward_mode: target, target: 450}`.
 
 ## Methods
 
@@ -33,7 +40,7 @@ Simplifications compared with real Balatro: one blind of Ante 1, no jokers, taro
 
 | `main.py` name (config in `configs/`) | Module | What it measures |
 |---|---|---|
-| `regret-table` | `experiments/regret.py` | regret V*(s) - Q*(s, a) on `Config.small()` vs simulator calls (Table 2, regret plot) |
+| `regret-table` | `experiments/regret.py` | regret V*(s) - Q*(s, a) on the `small` deck vs simulator calls (Table 2, regret plot) |
 | `full-game` | `experiments/full_game.py` | greedy vs UCT win rate on the 52-card Big Blind |
 | `baselines` | `experiments/full_game.py` | no-search policies at targets 300, 450, 600 |
 | `search` | `experiments/full_game.py` | UCT and flat MC vs the discard heuristic, paired on identical seeds |

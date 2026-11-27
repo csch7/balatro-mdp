@@ -1,0 +1,4 @@
+name: Painted Deck
+description: +2 hand size (its -1 Joker slot is not modeled)
+base: standard
+hand_size: 10

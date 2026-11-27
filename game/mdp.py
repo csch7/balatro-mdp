@@ -20,7 +20,7 @@ class State:
 
 
 class BalatroMDP:
-    def __init__(self, cfg: Config = Config()):
+    def __init__(self, cfg: Config):
         self.cfg = cfg
 
     def initial_state(self, rng: random.Random) -> State:

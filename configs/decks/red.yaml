@@ -1,0 +1,4 @@
+name: Red Deck
+description: +1 discard every round
+base: standard
+discards: 4

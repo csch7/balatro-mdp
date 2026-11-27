@@ -1,0 +1,4 @@
+name: Black Deck
+description: -1 hand every round (its +1 Joker slot is not modeled)
+base: standard
+hands: 3

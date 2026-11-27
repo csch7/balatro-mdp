@@ -1,0 +1,8 @@
+# Toy deck for exact solving and quick tests.
+name: Tiny toy deck
+description: 12 cards (9 to Ace, 2 suits), 5-card hand, 2 hands, 1 discard
+ranks: [9, 10, 11, 12, 13, 14]
+n_suits: 2
+hand_size: 5
+hands: 2
+discards: 1

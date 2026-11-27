@@ -1,0 +1,8 @@
+# Toy deck for exact solving: the largest one solved in ~10-20 s per starting hand.
+name: Small toy deck
+description: 14 cards (8 to Ace, 2 suits), 5-card hand, 2 hands, 1 discard
+ranks: [8, 9, 10, 11, 12, 13, 14]
+n_suits: 2
+hand_size: 5
+hands: 2
+discards: 1

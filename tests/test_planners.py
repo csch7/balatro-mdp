@@ -1,13 +1,13 @@
 """Smoke tests: each planner returns a legal action quickly."""
 import random
 
-from game import BalatroMDP, Config, Sim
+from game import BalatroMDP, Sim, deck_config
 from planners import UCT, FlatMC, SparseSampling
 from policies import greedy_rollout
 
 
 def _setup():
-    mdp = BalatroMDP(Config.tiny())
+    mdp = BalatroMDP(deck_config("tiny", reward_mode="target"))
     return mdp, Sim(mdp), mdp.initial_state(random.Random(4))
 
 

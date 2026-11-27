@@ -1,27 +1,45 @@
-"""Config files and the game-section parser."""
+"""Config files, deck files and the game-section parser."""
 from pathlib import Path
 
 import pytest
 
-from game import Config, config_from_dict
+from game import available_decks, config_from_dict, deck_config, load_deck
 from main import EXPERIMENTS, load_config
 
 CONFIGS = Path(__file__).resolve().parent.parent / "configs"
 
 
-def test_presets_match_code():
-    assert config_from_dict({"preset": "small"}) == Config.small()
-    assert config_from_dict(None) == Config()
+def test_standard_deck_is_the_real_game():
+    cfg = deck_config("standard")
+    assert len(cfg.full_deck()) == 52 and (cfg.hand_size, cfg.hands, cfg.discards) == (8, 4, 3)
 
 
-def test_overrides_and_abandoned_deck():
-    cfg = config_from_dict({"preset": "full", "ranks": [2, 3, 4, 5, 6, 7, 8, 9, 10, 14], "target": 450})
-    assert len(cfg.full_deck()) == 40 and cfg.target == 450 and cfg.hands == 4
+def test_toy_decks_match_the_paper():
+    small, tiny = deck_config("small"), deck_config("tiny")
+    assert len(small.full_deck()) == 14 and len(tiny.full_deck()) == 12
+    assert (small.hand_size, small.hands, small.discards) == (5, 2, 1)
 
 
-def test_unknown_key_is_rejected():
+def test_base_inheritance():
+    assert deck_config("red").discards == 4 and deck_config("red").hands == 4
+    assert len(deck_config("abandoned").full_deck()) == 40
+
+
+@pytest.mark.parametrize("name", available_decks())
+def test_every_deck_loads(name):
+    assert load_deck(name)["n_suits"] >= 1
+
+
+def test_overrides():
+    cfg = config_from_dict({"deck": "blue", "target": 450, "reward_mode": "target"})
+    assert cfg.hands == 5 and cfg.target == 450
+
+
+def test_unknown_key_and_deck_are_rejected():
     with pytest.raises(ValueError):
-        config_from_dict({"preset": "full", "hand_sise": 8})
+        config_from_dict({"deck": "standard", "hand_sise": 8})
+    with pytest.raises(ValueError):
+        config_from_dict({"deck": "purple"})
 
 
 @pytest.mark.parametrize("name", list(EXPERIMENTS))
@@ -33,5 +51,5 @@ def test_every_experiment_has_a_valid_config(name):
 
 
 def test_set_override():
-    conf = load_config(CONFIGS / "full_game.yaml", ["params.episodes=5", "game.target=600"])
-    assert conf["params"]["episodes"] == 5 and conf["game"]["target"] == 600
+    conf = load_config(CONFIGS / "full_game.yaml", ["params.episodes=5", "game.deck=red"])
+    assert conf["params"]["episodes"] == 5 and config_from_dict(conf["game"]).discards == 4

@@ -11,9 +11,10 @@ See [docs/model.md](docs/model.md) for the model and methods.
 balatro-mdp/
 ├── main.py                  command line for the demo and experiments (replaces the notebook's RUN_* flags)
 ├── configs/                 one YAML file per experiment: game settings + run parameters
+│   └── decks/               one YAML file per deck: standard, red, blue, black, painted, abandoned, small, tiny, medium
 ├── game/
 │   ├── rules.py             cards, hand evaluation, chips x mult scoring
-│   ├── config.py            Config: full game and small/tiny/medium presets, config_from_dict
+│   ├── config.py            Config, deck loading (load_deck, config_from_dict, deck_config)
 │   ├── mdp.py               State, BalatroMDP (step, transitions, canonical)
 │   └── simulator.py         Sim (counts simulator calls), run_episode
 ├── policies/
@@ -60,8 +61,8 @@ A file has a `game` section and a `params` section:
 ```yaml
 # configs/full_game.yaml
 game:
-  preset: full          # full | small | tiny | medium (see game/config.py)
-  reward_mode: target   # any other key overrides that Config field
+  deck: standard        # a file in configs/decks/
+  reward_mode: target   # any other key sets or overrides that Config field
   target: 450
 params:
   episodes: 100
@@ -74,17 +75,21 @@ To change a run, edit the file, point at your own file, or override single value
 ```
 python main.py full-game --config my_run.yaml
 python main.py full-game --set params.episodes=20 --set game.target=600
-python main.py full-game --set "game.ranks=[2, 3, 4, 5, 6, 7, 8, 9, 10, 14]"   # Abandoned Deck (40 cards)
+python main.py full-game --deck abandoned                # any deck in configs/decks/
 ```
+
+Decks (`configs/decks/*.yaml`) hold the cards and round rules (`ranks`, `n_suits`, `hand_size`, `hands`, `discards`);
+`base: standard` lets a deck change only what differs. The blind (`target`, `reward_mode`) belongs to the experiment config.
+See [configs/decks/README.md](configs/decks/README.md) for which Balatro decks are modeled.
 
 Library use:
 
 ```python
 import random
-from game import BalatroMDP, Config, Sim, run_episode
+from game import BalatroMDP, Sim, deck_config, run_episode
 from planners import UCT
 
-mdp = BalatroMDP(Config(reward_mode="target", target=450))
+mdp = BalatroMDP(deck_config("standard", reward_mode="target", target=450))
 uct = UCT(Sim(mdp), n_iter=300)
 win = run_episode(mdp, lambda m, s, r: uct.plan(s, r), random.Random(0))
 ```

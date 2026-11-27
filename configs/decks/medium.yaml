@@ -1,0 +1,8 @@
+# Mid-sized toy deck, used only to show where exact solving becomes infeasible (~3.6e16 evaluations).
+name: Medium toy deck
+description: 21 cards (8 to Ace, 3 suits), 5-card hand, 3 hands, 2 discards
+ranks: [8, 9, 10, 11, 12, 13, 14]
+n_suits: 3
+hand_size: 5
+hands: 3
+discards: 2

@@ -2,7 +2,9 @@
 # Needs a deck small enough to solve exactly.
 
 game:
-  preset: small
+  deck: small
+  reward_mode: target
+  target: 300
 params:
   n_states: 10              # random starting hands
   reps: 3                   # decisions per hand per method

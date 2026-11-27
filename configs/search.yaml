@@ -2,7 +2,7 @@
 # One block of games per entry in `runs`; each entry can override the target and game count.
 
 game:
-  preset: full
+  deck: standard
   reward_mode: target
 params:
   iters: 300

@@ -1,7 +1,7 @@
 # Greedy play vs UCT on the real 52-card game, Big Blind (~6 min).
 
 game:
-  preset: full
+  deck: standard
   reward_mode: target
   target: 450
 params:
