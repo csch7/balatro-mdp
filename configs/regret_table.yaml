@@ -1,5 +1,5 @@
 # Regret V*(s) - Q*(s, a) against exact values (Table 2 in the paper, ~5 min).
-# Needs a deck small enough to solve exactly.
+# Needs a deck small enough to solve exactly. Methods are planners/registry.py specs.
 
 game:
   deck: small
@@ -9,10 +9,18 @@ params:
   n_states: 10              # random starting hands
   reps: 3                   # decisions per hand per method
   seed: 0
-  sparse:                   # [H, C, greedy leaf?]
-    - [3, 1, false]
-    - [2, 1, true]
-    - [2, 2, true]
-    - [2, 4, true]
-  uct_iters: [25, 100, 400, 1600, 6400]
+  max_tree: 500000000       # ExactSolver limit
+methods:
+  - {label: random, type: random}
+  - {label: greedy-play, type: greedy}
+  - {label: discard heuristic, type: heuristic}
+  - {label: sparse H=3 C=1, type: sparse, H: 3, C: 1, leaf: null}
+  - {label: sparse H=2 C=1 +greedy leaf, type: sparse, H: 2, C: 1, leaf: greedy}
+  - {label: sparse H=2 C=2 +greedy leaf, type: sparse, H: 2, C: 2, leaf: greedy}
+  - {label: sparse H=2 C=4 +greedy leaf, type: sparse, H: 2, C: 4, leaf: greedy}
+  - {label: UCT 25 iters, type: uct, iters: 25}
+  - {label: UCT 100 iters, type: uct, iters: 100}
+  - {label: UCT 400 iters, type: uct, iters: 400}
+  - {label: UCT 1600 iters, type: uct, iters: 1600}
+  - {label: UCT 6400 iters, type: uct, iters: 6400}
 plot: false                 # save regret_vs_calls.png (needs matplotlib); --plot also turns this on

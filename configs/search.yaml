@@ -1,13 +1,18 @@
-# UCT and flat Monte Carlo vs the discard heuristic, paired on identical seeds (~40-50 min).
-# One block of games per entry in `runs`; each entry can override the target and game count.
+# Search methods vs the discard heuristic on identical games (~40-50 min).
+# One block of games per entry in `runs`. `reference` must be listed before the methods compared to it.
 
 game:
   deck: standard
   reward_mode: target
 params:
-  iters: 300
   seed: 0
-  methods: null             # null = all; or a list of names from experiments/full_game.py
 runs:
   - {target: 450, episodes: 300}
   - {target: 600, episodes: 150}
+reference: discard heuristic (no search)
+methods:
+  - {label: "greedy, no discards", type: greedy}
+  - {label: discard heuristic (no search), type: heuristic}
+  - {label: "UCT, greedy rollouts", type: uct, iters: 300, rollout: greedy}
+  - {label: "UCT, heuristic rollouts", type: uct, iters: 300, rollout: heuristic}
+  - {label: "flat MC, heuristic rollouts", type: flat_mc, m: 20, n: 15, rollout: heuristic}   # 20 x 15 = 300 rollouts

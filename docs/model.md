@@ -30,20 +30,28 @@ An experiment's `game` section picks a deck and sets the blind, for example
 
 ## Methods
 
+Every method implements `act(state, rng)` (`policies/base.py`) and is built from a config entry by
+`planners/registry.py`.
+
 - **Exact backward induction** (`solvers/exact.py`): V(s) = max_a [ r(s,a) + E V(s') ], memoized on the canonical key. Plays that end the episode skip draw enumeration, and the hands_left = 1, discards_left = 0 case has a closed form. `ReferenceSolver` is a shortcut-free second implementation used for cross-checking.
-- **Sparse sampling** (`planners/sparse_sampling.py`, Kearns, Mansour & Ng 2002): every action at every node, C sampled next states, depth H, optional leaf evaluator. Cost is about (|A| C)^H simulator calls, independent of |S|.
-- **UCT** (`planners/uct.py`, Kocsis & Szepesvari 2006): UCB1 selection W_a/N_a + c sqrt(ln N / N_a), progressive widening over the first 1 + floor(2 sqrt N) actions of `ordered_actions` in `policies/ordering.py`, greedy-rollout leaf evaluation, and a transposition table keyed by the canonical state. The move played is the most visited root action.
-- **Flat Monte Carlo** (`planners/flat_mc.py`): the top 20 ranked actions, n rollouts each, best mean wins.
-- **Baselines** (`policies/baselines.py`): greedy play (best 5-card hand, never discard) and the discard heuristic (discard non-scoring cards while the best hand is at most Two Pair).
+- **Sparse sampling** (`type: sparse`, Kearns, Mansour & Ng 2002): every action at every node, C sampled next states, depth H, optional rollout `leaf` policy. Cost is about (|A| C)^H simulator calls, independent of |S|.
+- **UCT** (`type: uct`, Kocsis & Szepesvari 2006): UCB1 selection W_a/N_a + c sqrt(ln N / N_a), progressive widening over the first 1 + floor(widen_c N^widen_alpha) actions of an action ordering (`ordered` or `shuffled`), a `rollout` policy for new leaves (null = 0), and a transposition table keyed by the canonical state (`key: plain` turns that off). The move played is the most visited root action.
+- **Flat Monte Carlo** (`type: flat_mc`): the top m ranked actions, n rollouts each, best mean wins.
+- **Baselines** (`policies/baselines.py`): greedy play (`type: greedy`, best 5-card hand, never discard; `tie_break: smallest` for the bad variant), the discard heuristic (`type: heuristic`, discard non-scoring cards while the best hand is in `discard_on`), and uniform random play.
+
+## Games and randomness
+
+Win-rate experiments play real games (`game/episode.py`): the deck is shuffled once from the game's seed and dealt from the top. The planner has its own random generator for simulations, so its search cannot change the cards. All methods in an experiment play the same seeds, so they face the same card order, and differences between methods are paired.
 
 ## Experiments
 
 | `main.py` name (config in `configs/`) | Module | What it measures |
 |---|---|---|
 | `regret-table` | `experiments/regret.py` | regret V*(s) - Q*(s, a) on the `small` deck vs simulator calls (Table 2, regret plot) |
-| `full-game` | `experiments/full_game.py` | greedy vs UCT win rate on the 52-card Big Blind |
+| `full-game` | `experiments/full_game.py` | win rates of the listed methods on one deck and target (default greedy vs UCT, Big Blind) |
 | `baselines` | `experiments/full_game.py` | no-search policies at targets 300, 450, 600 |
 | `search` | `experiments/full_game.py` | UCT and flat MC vs the discard heuristic, paired on identical seeds |
 | `validation` | `experiments/validation.py` | ExactSolver vs ReferenceSolver; simulated optimal play vs V* |
 | `tiny-diagnostics` | `experiments/validation.py` | sparse-sampling ties at C = 1, UCT bias on shallow variants |
-| `ablation` | `experiments/ablation.py` | UCT with one component changed at a time |
+| `ablation` | `experiments/ablation.py` | UCT with one setting changed at a time |
+| `demo` | `experiments/demo.py` | tree sizes, one exact solve, regret of a few methods on that hand |

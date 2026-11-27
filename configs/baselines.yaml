@@ -1,9 +1,15 @@
-# No-search policies on the full game at each Ante-1 blind (~1-10 min).
+# No-search policies at each Ante-1 blind (~1-10 min).
 
 game:
   deck: standard
   reward_mode: target
 params:
-  games: 1500
+  episodes: 1500
   targets: [300, 450, 600]  # small, big and boss blind
   seed: 11
+methods:
+  - {label: "greedy, smallest best subset (bad tie-break)", type: greedy, tie_break: smallest}
+  - {label: "greedy, no discards (5-card plays)", type: greedy}
+  - {label: discard junk if High Card, type: heuristic, discard_on: [High Card]}
+  - {label: discard junk if High Card/Pair, type: heuristic, discard_on: [High Card, Pair]}
+  - {label: discard junk if <= Two Pair, type: heuristic, discard_on: [High Card, Pair, Two Pair]}

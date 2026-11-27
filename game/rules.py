@@ -1,19 +1,17 @@
-"""Balatro scoring rules: cards, poker-hand evaluation and level-1 chip x mult values."""
+"""Balatro scoring rules: cards, poker-hand evaluation and chip x mult scoring.
+
+The chip/mult values per hand live in configs/scoring/*.yaml and reach here as `table`
+(a Config's `hand_table`).
+"""
 from __future__ import annotations
 
 from collections import Counter
 
 Card = tuple[int, int]                # (rank 2..14 with 14 = Ace, suit index)
-
-
 Action = tuple[str, tuple[int, ...]]  # ("play" | "discard", indices into state.hand)
 
-
-HAND_TABLE = {  # level-1 Balatro hands: (base chips, mult)
-    "High Card": (5, 1), "Pair": (10, 2), "Two Pair": (20, 2), "Three of a Kind": (30, 3),
-    "Straight": (30, 4), "Flush": (35, 4), "Full House": (40, 4),
-    "Four of a Kind": (60, 7), "Straight Flush": (100, 8),
-}
+HAND_NAMES = ("High Card", "Pair", "Two Pair", "Three of a Kind", "Straight", "Flush",
+              "Full House", "Four of a Kind", "Straight Flush")
 
 
 def card_chips(rank: int) -> int:
@@ -44,7 +42,8 @@ def evaluate(cards):
     return "High Card", [max(cards)]
 
 
-def score_hand(cards) -> int:
+def score_hand(cards, table: dict[str, tuple[int, int]]) -> int:
+    """(base chips + chips of the scoring cards) x mult, with (chips, mult) from `table`."""
     name, scoring = evaluate(cards)
-    chips, mult = HAND_TABLE[name]
+    chips, mult = table[name]
     return (chips + sum(card_chips(r) for r, _ in scoring)) * mult

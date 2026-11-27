@@ -1,4 +1,4 @@
-# Greedy play vs UCT on the real 52-card game, Big Blind (~6 min).
+# Greedy play vs UCT on a full deck, Big Blind (~6 min). All methods play the same games.
 
 game:
   deck: standard
@@ -6,5 +6,7 @@ game:
   target: 450
 params:
   episodes: 100
-  iters: 300                # UCT iterations per decision
-  seed: 0
+  seed: 0                   # game i uses seed "<seed>:<i>"
+methods:
+  - {label: greedy-play, type: greedy}
+  - {label: UCT, type: uct, iters: 300, c: 1.0, rollout: greedy}
