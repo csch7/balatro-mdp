@@ -1,0 +1,21 @@
+# UCT ablations on the full game, Big Blind (~45 min). Delete lines from `variants`
+# to run fewer; names must match ABLATIONS in experiments/ablation.py.
+
+game:
+  preset: full
+  reward_mode: target
+  target: 450
+params:
+  episodes: 100
+  iters: 300
+  seed: 0
+  variants:
+    - full (reported)
+    - plain key (no suit merging)
+    - no progressive widening
+    - random action order
+    - zero leaf value (no rollout)
+    - random rollout
+    - c = 0.25
+    - c = 2.0
+    - 100 iterations

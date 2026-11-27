@@ -1,0 +1,25 @@
+# Quick demo (~15 s): feasibility table, exact solve of one small-deck root,
+# and the regret of three planners on that root.
+#
+# `game` sections: `preset` is full | small | tiny | medium (see game/config.py),
+# and any other key overrides that Config field (ranks, n_suits, hand_size, hands,
+# discards, max_cards, target, reward_mode).
+
+game:
+  preset: small
+seed: 42                    # draws the starting hand
+optimal_episodes: 20000     # simulated games to check the optimal policy against V*
+uct:
+  iters: 1600
+  reps: 6
+sparse:
+  H: 2
+  C: 4
+  greedy_leaf: true
+  reps: 3
+
+feasibility:                # decks in the decision-tree size table
+  - {name: "21 cards, 3 hands, 2 discards", preset: medium}
+  - {name: "21 cards, 2 hands, 1 discard", preset: medium, hands: 2, discards: 1}
+  - {name: "small(): 14 cards, 2 hands, 1 discard", preset: small}
+  - {name: "tiny(): 12 cards, 2 hands, 1 discard", preset: tiny}

@@ -13,7 +13,11 @@ from policies.baselines import greedy_policy, greedy_rollout, heuristic_action
 from solvers.exact import ExactSolver, tree_size
 
 
-def experiment_exact(cfg: Config, n_states=10, reps=3, seed=0):
+SPARSE_SETTINGS = ((3, 1, False), (2, 1, True), (2, 2, True), (2, 4, True))   # (H, C, greedy leaf?)
+UCT_ITERS = (25, 100, 400, 1600, 6400)
+
+
+def experiment_exact(cfg: Config, n_states=10, reps=3, seed=0, sparse=SPARSE_SETTINGS, uct_iters=UCT_ITERS):
     """Regret V*(s) - Q*(s, chosen action) against exact values (win probability)."""
     mdp = BalatroMDP(cfg); solver = ExactSolver(mdp); rng = random.Random(seed)
     states = [mdp.initial_state(rng) for _ in range(n_states)]
@@ -22,10 +26,11 @@ def experiment_exact(cfg: Config, n_states=10, reps=3, seed=0):
     print(f"exact solve: {len(solver.memo)} memoized states, {time.time() - t0:.1f}s")
     sim = Sim(mdp)
     methods = {"random": None, "greedy-play": None, "discard heuristic": None}
-    for H, C, leaf in [(3, 1, None), (2, 1, greedy_rollout), (2, 2, greedy_rollout), (2, 4, greedy_rollout)]:
+    for H, C, use_leaf in sparse:
+        leaf = greedy_rollout if use_leaf else None
         methods[f"sparse H={H} C={C}" + (" +greedy leaf" if leaf else "")] = \
             lambda H=H, C=C, leaf=leaf: SparseSampling(sim, C=C, H=H, leaf=leaf)
-    for n in (25, 100, 400, 1600, 6400):
+    for n in uct_iters:
         methods[f"UCT {n} iters"] = lambda n=n: UCT(sim, n_iter=n)
     print(f"\n{'method':26s} {'regret':>8s} {'optimal%':>9s} {'sim calls/decision':>19s}")
     rows = []
@@ -51,10 +56,11 @@ def experiment_exact(cfg: Config, n_states=10, reps=3, seed=0):
     return rows
 
 
-def feasibility_table():
-    rows = [("21 cards, 3 hands, 2 discards", Config.medium()),
-            ("21 cards, 2 hands, 1 discard", Config(ranks=tuple(range(8, 15)), n_suits=3, hand_size=5, hands=2, discards=1)),
-            ("small(): 14 cards, 2 hands, 1 discard", Config.small()),
-            ("tiny(): 12 cards, 2 hands, 1 discard", Config.tiny())]
+def feasibility_table(rows=None):
+    """Print tree_size for (name, Config) rows (default: the decks discussed in the paper)."""
+    rows = rows or [("21 cards, 3 hands, 2 discards", Config.medium()),
+                    ("21 cards, 2 hands, 1 discard", Config(ranks=tuple(range(8, 15)), n_suits=3, hand_size=5, hands=2, discards=1)),
+                    ("small(): 14 cards, 2 hands, 1 discard", Config.small()),
+                    ("tiny(): 12 cards, 2 hands, 1 discard", Config.tiny())]
     for name, c in rows:
         print(f"  {name:42s} {tree_size(c):.2e}")

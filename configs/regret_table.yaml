@@ -1,0 +1,16 @@
+# Regret V*(s) - Q*(s, a) against exact values (Table 2 in the paper, ~5 min).
+# Needs a deck small enough to solve exactly.
+
+game:
+  preset: small
+params:
+  n_states: 10              # random starting hands
+  reps: 3                   # decisions per hand per method
+  seed: 0
+  sparse:                   # [H, C, greedy leaf?]
+    - [3, 1, false]
+    - [2, 1, true]
+    - [2, 2, true]
+    - [2, 4, true]
+  uct_iters: [25, 100, 400, 1600, 6400]
+plot: false                 # save regret_vs_calls.png (needs matplotlib); --plot also turns this on

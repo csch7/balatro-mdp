@@ -1,7 +1,7 @@
 """Game configuration: the real Ante-1 rules and the reduced toy decks used for exact solving."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, replace
 
 
 @dataclass(frozen=True)
@@ -37,3 +37,23 @@ class Config:
         """21 cards, 3 hands + 2 discards: NOT exactly solvable (~3.6e16 evaluations)."""
         return Config(ranks=tuple(range(8, 15)), n_suits=3, hand_size=5, hands=3,
                       discards=2, target=150)
+
+
+PRESETS = {"full": Config, "small": Config.small, "tiny": Config.tiny, "medium": Config.medium}
+
+
+def config_from_dict(d: dict | None) -> Config:
+    """Build a Config from a config-file section: `preset` (full | small | tiny | medium, default
+    full) plus any Config fields to override, e.g. {"preset": "full", "target": 450}."""
+    d = dict(d or {})
+    d.pop("name", None)                       # label used by some config files
+    preset = d.pop("preset", "full")
+    if preset not in PRESETS:
+        raise ValueError(f"unknown preset {preset!r}; choose from {sorted(PRESETS)}")
+    known = {f.name for f in fields(Config)}
+    unknown = set(d) - known
+    if unknown:
+        raise ValueError(f"unknown game setting(s) {sorted(unknown)}; valid: {sorted(known)}")
+    if "ranks" in d:
+        d["ranks"] = tuple(d["ranks"])
+    return replace(PRESETS[preset](), **d)

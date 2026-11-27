@@ -1,0 +1,10 @@
+# Greedy play vs UCT on the real 52-card game, Big Blind (~6 min).
+
+game:
+  preset: full
+  reward_mode: target
+  target: 450
+params:
+  episodes: 100
+  iters: 300                # UCT iterations per decision
+  seed: 0
