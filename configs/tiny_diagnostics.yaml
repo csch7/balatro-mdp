@@ -2,7 +2,9 @@
 # on shallower variants, then the regret table on the same deck.
 
 game:
-  preset: tiny
+  deck: tiny
+  reward_mode: target
+  target: 300
 params:
   seed: 0
   n_states: 10

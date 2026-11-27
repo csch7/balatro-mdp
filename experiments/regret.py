@@ -56,11 +56,7 @@ def experiment_exact(cfg: Config, n_states=10, reps=3, seed=0, sparse=SPARSE_SET
     return rows
 
 
-def feasibility_table(rows=None):
-    """Print tree_size for (name, Config) rows (default: the decks discussed in the paper)."""
-    rows = rows or [("21 cards, 3 hands, 2 discards", Config.medium()),
-                    ("21 cards, 2 hands, 1 discard", Config(ranks=tuple(range(8, 15)), n_suits=3, hand_size=5, hands=2, discards=1)),
-                    ("small(): 14 cards, 2 hands, 1 discard", Config.small()),
-                    ("tiny(): 12 cards, 2 hands, 1 discard", Config.tiny())]
+def feasibility_table(rows):
+    """Print tree_size for (name, Config) rows."""
     for name, c in rows:
         print(f"  {name:42s} {tree_size(c):.2e}")

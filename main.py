@@ -25,7 +25,7 @@ from experiments.ablation import experiment_ablation
 from experiments.full_game import experiment_baselines, experiment_full, experiment_search
 from experiments.regret import experiment_exact, feasibility_table
 from experiments.validation import experiment_tiny_diagnostics, experiment_validation
-from game import BalatroMDP, Sim, config_from_dict
+from game import BalatroMDP, Sim, available_decks, config_from_dict, load_deck
 from planners import UCT, SparseSampling
 from policies import greedy_policy, greedy_rollout
 from solvers import ExactSolver, simulate_optimal
@@ -41,7 +41,7 @@ def demo(conf):
     rng = random.Random(conf["seed"])
     mdp = BalatroMDP(config_from_dict(conf["game"]))
     s0 = mdp.initial_state(rng)
-    print(f"\nExact solve of Config.{conf['game'].get('preset', 'full')}(), seed-{conf['seed']} root...")
+    print(f"\nExact solve of {_describe(conf['game'])}, seed-{conf['seed']} root...")
     t0 = time.time()
     solver = ExactSolver(mdp)
     q = solver.solve(s0)
@@ -132,8 +132,8 @@ EXPERIMENTS = {   # name -> runner; each reads configs/<name with _ for ->.yaml
 
 
 def _describe(game: dict) -> str:
-    preset = game.get("preset", "full")
-    return "the full 52-card game" if preset == "full" and "ranks" not in game else f"Config.{preset}()"
+    deck = load_deck(game.get("deck", "standard"))
+    return f"the {game.get('deck', 'standard')} deck ({len(deck['ranks']) * deck['n_suits']} cards)"
 
 
 def load_config(path: Path, overrides=()) -> dict:
@@ -162,6 +162,8 @@ def main(argv=None):
                    help="config file to use instead of configs/<experiment>.yaml (one experiment only)")
     p.add_argument("--set", dest="overrides", action="append", default=[], metavar="KEY=VALUE",
                    help="override a config value, e.g. --set params.episodes=20 (repeatable)")
+    p.add_argument("--deck", choices=available_decks(),
+                   help="deck for the experiment's game section (same as --set game.deck=NAME)")
     p.add_argument("--plot", action="store_true", help="with regret-table: save regret_vs_calls.png")
     p.add_argument("--out-dir", default="results", help="where figures are written (default: results/)")
     args = p.parse_args(argv)
@@ -172,7 +174,7 @@ def main(argv=None):
         p.error("--config works with a single experiment")
     for name in names:
         path = args.config or CONFIG_DIR / f"{name.replace('-', '_')}.yaml"
-        conf = load_config(path, args.overrides)
+        conf = load_config(path, args.overrides + ([f"game.deck={args.deck}"] if args.deck else []))
         if name == "regret-table":
             conf["plot"] = conf.get("plot") or args.plot
             regret_table(conf, out_dir=args.out_dir)

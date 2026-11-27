@@ -1,0 +1,8 @@
+# Standard 52-card deck with the default Balatro round rules.
+# Ranks: 2-10, 11 = Jack, 12 = Queen, 13 = King, 14 = Ace. Suits are numbered 0..n_suits-1.
+name: Standard Deck
+ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+n_suits: 4
+hand_size: 8      # cards held
+hands: 4          # plays per round
+discards: 3       # discards per round

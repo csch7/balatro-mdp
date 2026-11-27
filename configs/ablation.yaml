@@ -2,7 +2,7 @@
 # to run fewer; names must match ABLATIONS in experiments/ablation.py.
 
 game:
-  preset: full
+  deck: standard
   reward_mode: target
   target: 450
 params:

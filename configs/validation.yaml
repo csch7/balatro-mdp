@@ -2,9 +2,13 @@
 # and simulated optimal play vs V* on small roots.
 
 tiny_game:
-  preset: tiny
+  deck: tiny
+  reward_mode: target
+  target: 300
 small_game:
-  preset: small
+  deck: small
+  reward_mode: target
+  target: 300
 params:
   n_tiny: 8
   n_small: 6

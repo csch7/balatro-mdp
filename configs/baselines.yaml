@@ -1,7 +1,7 @@
 # No-search policies on the full game at each Ante-1 blind (~1-10 min).
 
 game:
-  preset: full
+  deck: standard
   reward_mode: target
 params:
   games: 1500

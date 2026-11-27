@@ -1,0 +1,4 @@
+name: Blue Deck
+description: +1 hand every round
+base: standard
+hands: 5

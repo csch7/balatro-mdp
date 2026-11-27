@@ -1,0 +1,4 @@
+name: Abandoned Deck
+description: no face cards (40 cards)
+base: standard
+ranks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 14]
